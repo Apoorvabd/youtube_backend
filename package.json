@@ -1,28 +1,5 @@
 {
-  "name": "same",
-  "version": "1.0.0",
-  "description": "ab hoga comeback",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "dev": "nodemon srcc/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "no"
-  },
-  "keywords": [
-    "javascript"
-  ],
   "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "autoprefixer": "^10.4.23",
-    "nodemon": "^3.1.11",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.19"
-  },
   "dependencies": {
     "axios": "^1.13.5",
     "bcrypt": "^6.0.0",
@@ -37,5 +14,29 @@
     "mongoose": "^9.0.1",
     "mongoose-aggregate-paginate-v2": "^1.1.4",
     "multer": "^2.0.2"
-  }
+  },
+  "description": "ab hoga comeback",
+  "devDependencies": {
+    "autoprefixer": "^10.4.23",
+    "nodemon": "^3.1.11",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19"
+  },
+  "keywords": [
+    "javascript"
+  ],
+  "license": "ISC",
+  "main": "index.js",
+  "name": "same",
+  "repository": {
+    "type": "git",
+    "url": "no"
+  },
+  "scripts": {
+    "dev": "nodemon srcc/index.js",
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "version": "1.0.0"
 }
