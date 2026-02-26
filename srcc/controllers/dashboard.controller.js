@@ -8,11 +8,51 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 import { getUserChannelSubscribers } from "./subscription.controller.js"
 
 const getChannelStats = asyncHandler(async (req, res) => {
-    // TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
-    const allSubscribers=getUserChannelSubscribers();
-    
+    // compute basic dashboard statistics for the authenticated channel owner
+    const userId = req.user._id;
 
+    if (!isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid user id");
+    }
 
+    // total number of videos uploaded by this user
+    const totalVideos = await Video.countDocuments({ owner: userId });
+
+    // total views across all of the user's videos
+    const viewsResult = await Video.aggregate([
+        { $match: { owner: new mongoose.Types.ObjectId(userId) } },
+        { $group: { _id: null, views: { $sum: "$views" } } }
+    ]);
+    const totalViews = viewsResult[0]?.views || 0;
+
+    // total likes on the user's videos
+    const likesResult = await Like.aggregate([
+        {
+            $lookup: {
+                from: "videos",
+                localField: "video",
+                foreignField: "_id",
+                as: "videoInfo"
+            }
+        },
+        { $unwind: "$videoInfo" },
+        { $match: { "videoInfo.owner": new mongoose.Types.ObjectId(userId) } },
+        { $count: "likes" }
+    ]);
+    const totalLikes = likesResult[0]?.likes || 0;
+
+    // total subscribers of this channel
+    const totalSubscribers = await Subscription.countDocuments({ channel: userId });
+
+    return res.status(200).json(
+        new ApiResponse(200, {
+            totalVideos,
+            totalViews,
+            totalLikes,
+            totalSubscribers,
+        },
+        "channel statistics retrieved successfully")
+    );
 })
 
 const getChannelVideos = asyncHandler(async (req, res) => {

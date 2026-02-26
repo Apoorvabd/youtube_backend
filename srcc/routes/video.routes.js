@@ -11,7 +11,7 @@ import {verifyJWT} from "../middlewares/auth.middleware.js"
 import {upload} from "../middlewares/upload.middleware.js"
 
 const router = Router();
-//router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
+router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
 console.log("🔥 VIDEO ROUTER LOADED");
 
 

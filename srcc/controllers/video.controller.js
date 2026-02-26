@@ -14,9 +14,53 @@ import {uploadOnCloudinary} from "../utils/cloudinary.js"
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
 
-    //TODO: get all videos based on query, sort, pagination
-    
-    
+    const pageNumber = Math.max(parseInt(page, 10) || 1, 1)
+    const limitNumber = Math.max(parseInt(limit, 10) || 10, 1)
+    const skip = (pageNumber - 1) * limitNumber
+
+    const filter = {}
+
+    if (query?.trim()) {
+        filter.$or = [
+            { title: { $regex: query.trim(), $options: "i" } },
+            { description: { $regex: query.trim(), $options: "i" } }
+        ]
+    }
+
+    if (userId) {
+        if (!isValidObjectId(userId)) {
+            throw new ApiError(400, "invalid user id")
+        }
+        filter.owner = new mongoose.Types.ObjectId(userId)
+    }
+
+    const allowedSortFields = new Set(["createdAt", "updatedAt", "views", "title", "duration"])
+    const sortField = allowedSortFields.has(sortBy) ? sortBy : "createdAt"
+    const sortOrder = String(sortType).toLowerCase() === "asc" ? 1 : -1
+
+    const [videos, totalVideos] = await Promise.all([
+        Video.find(filter)
+            .sort({ [sortField]: sortOrder })
+            .skip(skip)
+            .limit(limitNumber)
+            .populate("owner", "username fullname avatar")
+            .lean(),
+        Video.countDocuments(filter)
+    ])
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                videos,
+                page: pageNumber,
+                limit: limitNumber,
+                totalVideos,
+                totalPages: Math.ceil(totalVideos / limitNumber)
+            },
+            "videos fetched successfully"
+        )
+    )
 })
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -37,21 +81,21 @@ const publishAVideo = asyncHandler(async (req, res) => {
     throw new ApiError(400, "videoFile path not found");
   }
 
-  if (!thumbnailPath) {
-    throw new ApiError(400, "thumbnail path not found");
-  }
-
   // ☁️ UPLOAD TO CLOUDINARY
-const videoFile = await uploadOnCloudinary(videoPath);
-console.log("CLOUDINARY VIDEO 👉", videoFile);
-const thumbnail = await uploadOnCloudinary(thumbnailPath);
+  const videoFile = await uploadOnCloudinary(videoPath);
+  console.log("CLOUDINARY VIDEO 👉", videoFile);
 
   if (!videoFile?.secure_url) {
     throw new ApiError(400, "video upload failed");
   }
 
-  if (!thumbnail?.secure_url) {
-    throw new ApiError(400, "thumbnail upload failed");
+  // Upload thumbnail if provided, otherwise use video poster frame
+  let thumbnail = null;
+  if (thumbnailPath) {
+    thumbnail = await uploadOnCloudinary(thumbnailPath);
+    if (!thumbnail?.secure_url) {
+      throw new ApiError(400, "thumbnail upload failed");
+    }
   }
 
   // 📦 SAVE TO DB
@@ -59,9 +103,9 @@ const thumbnail = await uploadOnCloudinary(thumbnailPath);
     title,
     description,
     videoFile: videoFile.secure_url,
-    thumbnail: thumbnail.secure_url,
+    thumbnail: thumbnail?.secure_url || videoFile.secure_url, // Use video as fallback
     duration: Math.round(videoFile.duration || 0),
-    owner: req.user?._id || null
+    owner: req.user?._id 
   });
 
   if (!video) {
@@ -80,8 +124,11 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError(400 ,"unable to get vdo id")
     }
     const video=await Video.findById(videoId)
+    const owner=await User.findById(video.owner)
+    console.log(owner);
+    
 
-
+    const resu=[video,owner]
     if(!video){
         throw new ApiError(400,"video not found ")
     }
@@ -90,7 +137,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     },
     {new:true},)
     res.status(200).
-    json(new ApiResponse(200,video,"video find "))
+    json(new ApiResponse(200,resu,"video find "))
 })
 
 const updateVideo = asyncHandler(async (req, res) => {

@@ -67,13 +67,13 @@ const registerUser = asyncHandler( async (req, res) => {
     //const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
     let coverImageLocalPath;
-    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-        coverImageLocalPath = req.files.coverImage[0].path
+    if (req.files && Array.isArray(req.files.cover) && req.files.cover.length > 0) {
+        coverImageLocalPath = req.files.cover[0].path
     }
 
     let avatarLocalPath;
     if (req.files && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
-        avatarLocalPath = req.files.coverImage[0].path
+        avatarLocalPath = req.files.avatar[0].path
     }
     
 
@@ -127,6 +127,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     if (!user) {
         throw new ApiError(404, "User does not exist");
+    
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password);
