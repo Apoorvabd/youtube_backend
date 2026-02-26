@@ -29,7 +29,9 @@ import dashboardRouter from "./routes/dashboard.routes.js"
 //routes declaration
 
 console.log("🔥 APP FILE LOADED");
-
+app.get("/", (req, res) => {
+  res.send("Server is running 🚀");
+});
 
 app.use("/api/v1/healthcheck", healthcheckRouter)
 app.use("/api/v1/users", userRouter)
