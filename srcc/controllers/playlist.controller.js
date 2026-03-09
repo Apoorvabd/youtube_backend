@@ -9,6 +9,7 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 const createPlaylist = asyncHandler(async (req, res) => {
 
     const { name, description } = req.body
+    
 
     if (!name) {
         throw new ApiError(400, "Give name to playlist")
@@ -30,6 +31,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
 const getUserPlaylists = asyncHandler(async (req, res) => {
 
     const { userId } = req.params
+    console.log(userId)
 
     if (!isValidObjectId(userId)) {
         throw new ApiError(400, "Invalid user id")

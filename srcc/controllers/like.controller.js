@@ -30,7 +30,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     });
 
     res.status(200).json(
-        new ApiResponse(200, null, "Video liked")
+        new ApiResponse(200, req.user.fullName, "Video liked")
     );
 });
 

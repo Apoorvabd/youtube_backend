@@ -8,40 +8,40 @@ const getVideoComments = asyncHandler(async (req, res) => {
     //TODO: get all comments for a video
     const {videoId} = req.params
     const {page = 1, limit = 10} = req.query
+    console.log("hey comenst are here");
     if(!mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(403 ,"not valid video id")
     }
-    const skip =(page-1)*limit;
-    const listofcom=Comment.aggregate([{
-        $match:{video:new mongoose.Types.ObjectId(videoId)}
-    }
-    ,{
-        $lookup:{
-            from:"users",
-            localField:"owner",
-            foreignField:"_id",
-            as:"commenter"
-        }
-    }
-    ,{
-        $unwind:"$commenter"
-    },
-    {
-        $project:{
-            content:1,
-            createdAt:1,
-            "commneter.fullname":1,
-            "commenter.id":1,
-            "commenter.email":1
-        }
-    },
-    {
-        $skip:skip
-    },{$limit:Number(limit)}
-])
+    const skip = (Number(page) - 1) * Number(limit);
+    const listofcom = await Comment.aggregate([
+        {
+            $match: { video: new mongoose.Types.ObjectId(videoId) }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "commenter"
+            }
+        },
+        {
+            $unwind: "$commenter"
+        },
+        {
+            $project: {
+                content: 1,
+                createdAt: 1,
+                "commenter.fullName": 1,
+                "commenter._id": 1,
+                "commenter.email": 1
+            }
+        },
+        { $skip: skip },
+        { $limit: Number(limit) }
+    ]);
 
-    
-    res.status(200).json(new ApiResponse(200,listofcom,"here is lidt of all the comments on this video"))
+    res.status(200).json(new ApiResponse(200, listofcom, "here is list of all the comments on this video"))
 })
 
 const addComment = asyncHandler(async (req, res) => {
@@ -55,10 +55,10 @@ const addComment = asyncHandler(async (req, res) => {
     if(!content){
          throw new ApiError(403,"enter all fields ")
     }
-    const newcomment=await Comment.create({
+    const newcomment = await Comment.create({
         content,
-        videoId,
-        owner:req.user._id
+        video: videoId,
+        owner: req.user._id
     })
     res.status(200).json(new ApiResponse(200,newcomment,"comment added successfully"))
 })
