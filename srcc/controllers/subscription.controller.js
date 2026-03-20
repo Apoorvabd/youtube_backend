@@ -47,14 +47,14 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
 
-  if (!isValidObjectId(new mongoose.Types.ObjectId(channelId))) {
+  if (!channelId || !isValidObjectId(channelId)) {
     throw new ApiError(400, "Invalid channelId");
-
   }
 
+  const channelObjectId = new mongoose.Types.ObjectId(channelId);
 
   const list = await Subscription.aggregate([
-    { $match: { channel: (channelId) } },
+    { $match: { channel: channelObjectId } },
     {
       $lookup: {
         from: "users",
@@ -82,10 +82,16 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
 // Get channels a user has subscribed to
 const getSubscribedChannels = asyncHandler(async (req, res) => {
-  const subscriberId = req.user._id; // always use authenticated user
+  const requestedSubscriberId = req.params.subscriberId || req.user?._id;
+
+  if (!requestedSubscriberId || !isValidObjectId(requestedSubscriberId)) {
+    throw new ApiError(400, "Invalid subscriberId");
+  }
+
+  const subscriberId = new mongoose.Types.ObjectId(requestedSubscriberId);
 
   const list = await Subscription.aggregate([
-    { $match: { subscriber: (subscriberId) } },
+    { $match: { subscriber: subscriberId } },
     {
       $lookup: {
         from: "users",

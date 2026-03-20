@@ -25,7 +25,23 @@ export const verifyJWT = asyncHandler(async(req, _, next) => {
         req.user = user;
         next()
     } catch (error) {
-        throw new ApiError(401, error?.message || "Invalid access token")
+        if (error instanceof ApiError) {
+            throw error;
+        }
+
+        const isJwtError = ["JsonWebTokenError", "TokenExpiredError", "NotBeforeError"].includes(error?.name);
+        if (isJwtError) {
+            throw new ApiError(401, "Invalid access token");
+        }
+
+        const errorText = `${error?.name || ""} ${error?.message || ""}`;
+        const isDatabaseConnectivityError = /ENOTFOUND|ECONNREFUSED|ETIMEDOUT|MongoNetworkError|MongoServerSelectionError/i.test(errorText);
+
+        if (isDatabaseConnectivityError) {
+            throw new ApiError(503, "Database connection issue. Please try again shortly.");
+        }
+
+        throw new ApiError(500, error?.message || "Authentication middleware failed");
     }
     
 })

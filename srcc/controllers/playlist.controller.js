@@ -42,6 +42,14 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
             $match: {
                 owner: new mongoose.Types.ObjectId(userId)
             }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "videos",
+                foreignField: "_id",
+                as: "videos"
+            }
         }
     ])
 

@@ -11,29 +11,27 @@ import {verifyJWT} from "../middlewares/auth.middleware.js"
 import {upload} from "../middlewares/upload.middleware.js"
 
 const router = Router();
-router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
 console.log("🔥 VIDEO ROUTER LOADED");
 
+// ── Public routes (no auth needed) ──────────────────────────────────────────
+router.route("/").get(getAllVideos);
+router.route("/:videoId").get(getVideoById);
 
+// ── Protected routes (JWT required) ─────────────────────────────────────────
+router.post(
+  "/",
+  verifyJWT,
+  upload.fields([
+    { name: "videoFile", maxCount: 1 },
+    { name: "thumbnail", maxCount: 1 },
+  ]),
+  publishAVideo
+);
 
-router.route("/").get(getAllVideos).post(
-        upload.fields([
-            {
-                name: "videoFile",
-                maxCount: 1,
-            },
-            {
-                name: "thumbnail",
-                maxCount: 1,
-            },
-            
-        ]),
-        publishAVideo
-    );
+router.route("/:videoId")
+  .delete(verifyJWT, deleteVideo)
+  .patch(verifyJWT, upload.single("thumbnail"), updateVideo);
 
-router.route("/:videoId").get(getVideoById).delete(deleteVideo)
-.patch(upload.single("thumbnail"), updateVideo);
-
-router.route("/toggle/publish/:videoId").patch(togglePublishStatus);
+router.route("/toggle/publish/:videoId").patch(verifyJWT, togglePublishStatus);
 
 export default router

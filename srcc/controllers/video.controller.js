@@ -9,7 +9,7 @@ import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
-
+ 
 
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
@@ -118,29 +118,32 @@ const publishAVideo = asyncHandler(async (req, res) => {
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
+    const { videoId } = req.params;
     console.log("getting video");
-    //TODO: get video by id
-    if(!videoId){
-        throw new ApiError(400 ,"unable to get vdo id")
-    }
-    Video.findByIdAndUpdate(videoId,{
-        $inc:{views:1}
-    },
-    {new:true},)
-    const video=await Video.findById(videoId)
-    const owner=await User.findById(video.owner)
-        console.log(video.views,"hgkj");
 
-    
-
-    const resu=[video,owner]
-    if(!video){
-        throw new ApiError(400,"video not found ")
+    if (!videoId) {
+        throw new ApiError(400, "unable to get video id");
     }
-    
-    res.status(200).
-    json(new ApiResponse(200,resu,"video find "))
+
+    // ✅ await lagao — warna update background me choot jaata tha aur views kabhi +1 nahi hote the
+    // {new: true} → updated document return karega (views already +1 hoga)
+    const video = await Video.findByIdAndUpdate(
+        videoId,
+        { $inc: { views: 0.5 } },
+        { new: true }
+    );
+
+    if (!video) {
+        throw new ApiError(404, "video not found");
+    }
+
+    const owner = await User.findById(video.owner).select("-password -refreshToken");
+
+    console.log("views after update:", video.views);
+
+    return res.status(200).json(
+        new ApiResponse(200, { video, owner }, "video fetched successfully")
+    );
 })
 
 const updateVideo = asyncHandler(async (req, res) => {

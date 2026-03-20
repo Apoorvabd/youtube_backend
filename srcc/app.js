@@ -62,6 +62,7 @@ app.use((err, req, res, next) => {
             error: err.message,
             code: err.code
         });
+        
     } else if (err) {
         // An unknown error occurred when uploading.
         console.error("Global Error Handler:", err);
