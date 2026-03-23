@@ -124,6 +124,9 @@ const getVideoById = asyncHandler(async (req, res) => {
     if (!videoId) {
         throw new ApiError(400, "unable to get video id");
     }
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "invalid video id");
+    }
 
     // ✅ await lagao — warna update background me choot jaata tha aur views kabhi +1 nahi hote the
     // {new: true} → updated document return karega (views already +1 hoga)
@@ -188,6 +191,9 @@ const deleteVideo = asyncHandler(async (req, res) => {
     //TODO: delete video
     if(!videoId){
         throw new ApiError(400,"not found video id")
+    }
+    if(!isValidObjectId(videoId)){
+        throw new ApiError(400,"invalid video id")
     }
     const video=await Video.findById(videoId)
 

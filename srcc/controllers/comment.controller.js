@@ -65,31 +65,44 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
     // TODO: update a comment
-    const {comId}=req.params
-    if(!mongoose.Types.ObjectId.isValid(comId)){
+    const {commentId}=req.params
+    if(!mongoose.Types.ObjectId.isValid(commentId)){
         throw new ApiError(403,"unable to process ")
     }
-    const comment =await Comment.findById(comId);
+    const comment =await Comment.findById(commentId);
+    if(!comment){
+        throw new ApiError(404,"comment not found")
+    }
     if(comment.owner.toString()!== req.user._id.toString()){
         throw new ApiError(400,"not authorized to update this ")
     }
-    const {newcon}=req.body
-    const updated =await Comment.findByIdAndUpdate(comId,{content:newcon})
+    const {content}=req.body
+    if(!content?.trim()){
+        throw new ApiError(400,"content is required")
+    }
+    const updated =await Comment.findByIdAndUpdate(
+        commentId,
+        {content: content.trim()},
+        {new: true}
+    )
     res.status(200).json(new ApiResponse(200,updated,"update completed"))
 })
 
 const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
-    const {comId}=req.params
-    if(!mongoose.Types.ObjectId.isValid(comId)){
+    const {commentId}=req.params
+    if(!mongoose.Types.ObjectId.isValid(commentId)){
         throw new ApiError(403,"wrong id mili hai")
     }
 
-    const comment = await Comment.findById(comId)
+    const comment = await Comment.findById(commentId)
+    if(!comment){
+        throw new ApiError(404,"comment not found")
+    }
     if(comment.owner.toString()!== req.user._id.toString()){
         throw new ApiError(400,"not authorized to delete this ")
     }
-    const deletecomment = await Comment.findByIdAndDelete(comId)
+    const deletecomment = await Comment.findByIdAndDelete(commentId)
     res.status(200).json(new ApiResponse(200,deletecomment,"delete completed"))
 
 })
