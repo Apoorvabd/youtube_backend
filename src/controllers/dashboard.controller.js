@@ -59,37 +59,60 @@ const getChannelStats = asyncHandler(async (req, res) => {
 })
 
 const getChannelVideos = asyncHandler(async (req, res) => {
-    // TODO: Get all the videos uploaded by the channel
-    const uId=req.user._id;
-    if(!isValidObjectId(uId)){
-        throw new ApiError(400,"wrong id")
+    const uId = req.user._id;
+    if (!isValidObjectId(uId)) {
+        throw new ApiError(400, "invalid user id")
     }
-    const list=await Video.aggregate([
+
+    const { page = 1, limit = 10, sortBy = "createdAt", sortType = "desc" } = req.query;
+    
+    const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNumber = Math.max(parseInt(limit, 10) || 10, 1);
+    const skip = (pageNumber - 1) * limitNumber;
+    const sortOrder = sortType === "asc" ? 1 : -1;
+
+    const pipeline = [
         {
-            $match:{owner:uId}
+            $match: { owner: new mongoose.Types.ObjectId(uId) }
         },
         {
-            $project:{
-                title:1,
-                description:1,
-                videoFile:1,
-                duration:1,
-                thumbnail:1,
-                owner:1,
-                views:1,
-                
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner"
             }
-        }
-    ])
-    const user=await User.findById(uId)
-   const result = list.map((video) => ({
-  ...video,
-  owner: user
-}))
-    res.status(200).json(new ApiResponse(200,result,"here is list of all videos posted by you"))
+        },
+        {
+            $unwind: "$owner"
+        },
+        {
+            $project: {
+                title: 1,
+                description: 1,
+                videoFile: 1,
+                duration: 1,
+                thumbnail: 1,
+                views: 1,
+                createdAt: 1,
+                isPublished: 1,
+                "owner.username": 1,
+                "owner.fullName": 1,
+                "owner.avatar": 1,
+                "owner._id": 1
+            }
+        },
+        { $sort: { [sortBy]: sortOrder } },
+        { $skip: skip },
+        { $limit: limitNumber }
+    ];
+
+    const videos = await Video.aggregate(pipeline);
+
+    res.status(200).json(new ApiResponse(200, videos, "Channel videos fetched successfully"))
 })
 
 export {
     getChannelStats, 
     getChannelVideos
-    }
+}
