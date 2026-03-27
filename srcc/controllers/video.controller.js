@@ -132,7 +132,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     // {new: true} → updated document return karega (views already +1 hoga)
     const video = await Video.findByIdAndUpdate(
         videoId,
-        { $inc: { views: 0.5 } },
+        { $inc: { views: 1 } },
         { new: true }
     );
 

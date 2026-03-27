@@ -68,14 +68,42 @@ const getPlaylistById = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid playlist id")
     }
 
-    const playlist = await Playlist.findById(playlistId)
+    const playlist = await Playlist.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(playlistId)
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "videos",
+                foreignField: "_id",
+                as: "videos"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner"
+            }
+        },
+        {
+            $unwind: {
+                path: "$owner",
+                preserveNullAndEmptyArrays: true
+            }
+        }
+    ])
 
-    if (!playlist) {
+    if (!playlist || playlist.length === 0) {
         throw new ApiError(404, "Playlist not found")
     }
 
     res.status(200).json(
-        new ApiResponse(200, playlist, "Found your playlist")
+        new ApiResponse(200, playlist[0], "Found your playlist")
     )
 })
 
@@ -108,8 +136,25 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
     playlist.videos.push(videoId)
     await playlist.save()
 
+    // Return populated playlist
+    const updatedPlaylist = await Playlist.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(playlistId)
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "videos",
+                foreignField: "_id",
+                as: "videos"
+            }
+        }
+    ])
+
     res.status(200).json(
-        new ApiResponse(200, playlist, "Video added to playlist")
+        new ApiResponse(200, updatedPlaylist[0], "Video added to playlist")
     )
 })
 
@@ -139,8 +184,25 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 
     await playlist.save()
 
+    // Return populated playlist
+    const updatedPlaylist = await Playlist.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(playlistId)
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "videos",
+                foreignField: "_id",
+                as: "videos"
+            }
+        }
+    ])
+
     res.status(200).json(
-        new ApiResponse(200, playlist, "Video removed from playlist")
+        new ApiResponse(200, updatedPlaylist[0], "Video removed from playlist")
     )
 })
 
