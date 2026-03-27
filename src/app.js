@@ -4,10 +4,18 @@ import cookieParser from "cookie-parser"
 
 const app = express()
 
-const allowedOrigins = (process.env.CORS_ORIGIN || "")
+const configuredOrigins = (process.env.CORS_ORIGIN || "")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
+
+const defaultOrigins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://navyaekshan.netlify.app"
+];
+
+const allowedOrigins = [...new Set([...defaultOrigins, ...configuredOrigins])];
 
 app.use(cors({
     origin: (origin, callback) => {
