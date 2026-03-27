@@ -1,11 +1,18 @@
 import multer from "multer";
 import path from "path";
+import fs from "fs";
+
+const tempUploadDir = path.resolve("public/temp");
+
+if (!fs.existsSync(tempUploadDir)) {
+  fs.mkdirSync(tempUploadDir, { recursive: true });
+}
 
 // storage config
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     console.log("DEBUG - Multer Destination Called for:", file.fieldname);
-    cb(null, "public/temp"); // yahan file temporarily save hogi
+    cb(null, tempUploadDir); // yahan file temporarily save hogi
   },
   filename: function (req, file, cb) {
     const uniqueName =

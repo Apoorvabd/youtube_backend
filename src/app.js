@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import { ApiError } from "./utils/ApiError.js"
 
 const app = express()
 
@@ -86,6 +87,11 @@ app.use((err, req, res, next) => {
             code: err.code
         });
         
+    } else if (err instanceof ApiError) {
+        return res.status(err.statusCode || 500).json({
+            message: err.message,
+            errors: err.errors || []
+        });
     } else if (err) {
         // An unknown error occurred when uploading.
         console.error("Global Error Handler:", err);
