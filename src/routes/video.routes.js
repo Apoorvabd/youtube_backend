@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
     deleteVideo,
+  getfilteredvdo,
     getAllVideos,
     getVideoById,
     publishAVideo,
@@ -15,6 +16,7 @@ console.log("🔥 VIDEO ROUTER LOADED");
 
 // ── Public routes (no auth needed) ──────────────────────────────────────────
 router.route("/").get(getAllVideos);
+router.route("/search").get(getfilteredvdo);
 router.route("/:videoId").get(getVideoById);
 
 // ── Protected routes (JWT required) ─────────────────────────────────────────

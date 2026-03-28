@@ -228,11 +228,26 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200,video,"video publish status toggled successfully"))
 })
 
+const getfilteredvdo = asyncHandler(async (req, res) => {
+    const { q } = req.query;
+    if (!q) {
+        throw new ApiError(400, "Search query is required");
+    }
+
+    const videos = await Video.find({
+        $text: { $search: q }
+    }).populate("owner", "username avatar");
+
+    return res.status(200).json(new ApiResponse(200, videos, "Filtered videos fetched successfully"));
+});
+
+
 export {
     getAllVideos,
     publishAVideo,
     getVideoById,
     updateVideo,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
+    getfilteredvdo
 }
