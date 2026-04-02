@@ -143,6 +143,10 @@ const getVideoById = asyncHandler(async (req, res) => {
     const owner = await User.findById(video.owner).select("-password -refreshToken");
 
     console.log("views after update:", video.views);
+console.log("adding to watchlist");
+    if (req.user?._id) {
+        await addToWatchHistory(req.user._id, videoId);
+    }
 
     return res.status(200).json(
         new ApiResponse(200, { video, owner }, "video fetched successfully")
@@ -229,17 +233,58 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
 })
 
 const getfilteredvdo = asyncHandler(async (req, res) => {
-    const { q } = req.query;
+    const { q, page = 1, limit = 10 } = req.query;
+
     if (!q) {
         throw new ApiError(400, "Search query is required");
     }
 
-    const videos = await Video.find({
-        $text: { $search: q }
-    }).populate("owner", "username avatar");
+    const videos = await Video.find(
+        { $text: { $search: q } },
+        { score: { $meta: "textScore" } }
+    )
+        .sort({ score: { $meta: "textScore" } })
+        .skip((page - 1) * limit)
+        .limit(Number(limit))
+        .populate("owner", "username avatar");
 
-    return res.status(200).json(new ApiResponse(200, videos, "Filtered videos fetched successfully"));
+    return res
+        .status(200)
+        .json(new ApiResponse(200, videos, "Filtered videos fetched successfully"));
 });
+
+async function addToWatchHistory(userId, videoId) {
+  if (!isValidObjectId(userId) || !isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid user ID or video ID");
+  }
+
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+  console.log("hii watch history me add krne jaa rha hun");
+
+  await User.findByIdAndUpdate(
+    userId,
+    {
+      $pull: { watchHistory: videoId }
+    }
+  );
+
+  await User.findByIdAndUpdate(
+    userId,
+    {
+      $push: {
+        watchHistory: {
+          $each: [videoId],
+          $position: 0
+        }
+      }
+    }
+  );
+  console.log("added to watch history");
+}
+
 
 
 export {

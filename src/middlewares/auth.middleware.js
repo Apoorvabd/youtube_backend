@@ -10,6 +10,9 @@ export const verifyJWT = asyncHandler(async(req, _, next) => {
         console.log("TOKEN RECEIVED:", token);
         // console.log(token);
         if (!token) {
+            if (req.isOptionalAuth) {
+                return next();
+            }
             throw new ApiError(401, "Unauthorized request")
         }
     
@@ -18,13 +21,18 @@ export const verifyJWT = asyncHandler(async(req, _, next) => {
         const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
     
         if (!user) {
-            
+            if (req.isOptionalAuth) {
+                return next();
+            }
             throw new ApiError(401, "Invalid Access Token")
         }
     
         req.user = user;
         next()
     } catch (error) {
+        if (req.isOptionalAuth) {
+            return next();
+        }
         if (error instanceof ApiError) {
             throw error;
         }

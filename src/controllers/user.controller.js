@@ -465,15 +465,42 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                     }
                 ]
             }
+        },
+        {
+            $addFields: {
+                watchHistory: {
+                    $map: {
+                        input: "$watchHistory",
+                        as: "v",
+                        in: {
+                            $mergeObjects: [
+                                "$$v",
+                                {
+                                    originalIndex: {
+                                        $indexOfArray: ["$watchHistory", "$$v._id"]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
         }
     ])
+
+    // Sort watchHistory in the same order as the array stored in user document
+    const watchHistory = user[0]?.watchHistory || [];
+    const orderedHistory = [...watchHistory].sort((a, b) => {
+        return user[0].watchHistory.findIndex(v => v._id.toString() === a._id.toString()) - 
+               user[0].watchHistory.findIndex(v => v._id.toString() === b._id.toString());
+    });
 
     return res
     .status(200)
     .json(
         new ApiResponse(
             200,
-            user[0].watchHistory,
+            watchHistory, // Aggregation preserves some order but we might need explicit sort if lookup randomizes
             "Watch history fetched successfully"
         )
     )
