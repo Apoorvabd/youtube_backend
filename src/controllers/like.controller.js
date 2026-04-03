@@ -104,35 +104,54 @@ const getLikedVideos = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Unauthorized");
     }
 
-    const list = await Like.aggregate([
-        { $match: { likedBy: userId, video: { $exists: true } } },
+    const result = await Like.aggregate([
+        {
+            $match: {
+                likedBy: new mongoose.Types.ObjectId(userId),
+                video: { $exists: true, $ne: null }
+            }
+        },
         {
             $lookup: {
                 from: "videos",
                 localField: "video",
                 foreignField: "_id",
-                as: "videoList"
+                as: "video"
             }
         },
-        { $unwind: "$videoList" },
+        { $unwind: "$video" },
+        {
+            $lookup: {
+                from: "users",
+                localField: "video.owner",
+                foreignField: "_id",
+                as: "owner"
+            }
+        },
+        { $unwind: "$owner" },
         {
             $project: {
-                _id: 0,
-                videoId: "$videoList._id",
-                title: "$videoList.title",
-                owner: "$videoList.owner",
-                thumbnail: "$videoList.thumbnail",
-                createdAt: "$videoList.createdAt"
+                _id: "$video._id",
+                thumbnail: "$video.thumbnail",
+                videoFile: "$video.videoFile",
+                title: "$video.title",
+                description: "$video.description",
+                duration: "$video.duration",
+                views: "$video.views",
+                isPublished: "$video.isPublished",
+                createdAt: "$video.createdAt",
+                owner: {
+                    _id: "$owner._id",
+                    username: "$owner.username",
+                    fullName: "$owner.fullName",
+                    avatar: "$owner.avatar"
+                }
             }
         }
     ]);
-    const user=await User.findById(req.user._id);
-const result = list.map((video) => ({
-  ...video,
-  owner: user
-}))
+
     res.status(200).json(
-        new ApiResponse(200, result, "Here are liked videos")
+        new ApiResponse(200, result, "Liked videos fetched successfully")
     );
 });
 

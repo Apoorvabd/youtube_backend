@@ -43,7 +43,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
             .sort({ [sortField]: sortOrder })
             .skip(skip)
             .limit(limitNumber)
-            .populate("owner", "username fullname avatar")
+            .populate("owner","avatar fullName _id")
             .lean(),
         Video.countDocuments(filter)
     ])
