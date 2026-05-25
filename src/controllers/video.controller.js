@@ -191,8 +191,9 @@ const updateVideo = asyncHandler(async (req, res) => {
 })
 
 const deleteVideo = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
-    //TODO: delete video
+    const { videoId } = req.params;
+    console.log("DELETE REQUEST RECEIVED FOR ID:", videoId);
+    
     if(!videoId){
         throw new ApiError(400,"not found video id")
     }
@@ -202,13 +203,12 @@ const deleteVideo = asyncHandler(async (req, res) => {
     const video=await Video.findById(videoId)
 
     if(!video){
-        throw new ApiError(400,"video not found")
+        throw new ApiError(404,"video not found")
     }
-//     else{
-//     if(video.owner.toString() !== req.user._id.toString()){
-//    throw new ApiError(403,"Not authorized")
-//     }
-//     }
+
+    if(video.owner.toString() !== req.user?._id?.toString()){
+        throw new ApiError(403,"You are not the owner of this video")
+    }
 
     await Video.findByIdAndDelete(videoId)
     res.status(200)

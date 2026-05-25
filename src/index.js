@@ -6,7 +6,6 @@ dotenv.config({
     path: './.env'
 })
 
-console.log("src copy is ehere")
 
 connectDB()
 .then(() => {
