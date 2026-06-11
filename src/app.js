@@ -54,7 +54,7 @@ import dashboardRouter from "./routes/dashboard.routes.js"
 
 console.log("🔥 APP FILE LOADED");
 app.get("/", (req, res) => {
-  res.send("Server is running 🚀");
+  res.send("Server is running ");
 });
 
 app.use("/api/v1/healthcheck", healthcheckRouter)
