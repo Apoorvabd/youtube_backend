@@ -32,7 +32,7 @@ export const uploadImage = multer({
     if (file.mimetype.startsWith("image/")) cb(null, true);
     else cb(new Error("Only image files allowed"), false);
   },
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
 export const uploadVideo = multer({
@@ -42,7 +42,7 @@ export const uploadVideo = multer({
       cb(null, true);
     else cb(new Error("Only video or image files allowed"), false);
   },
-  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB max for video
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB max for video
 });
 
 
@@ -50,6 +50,6 @@ export const uploadVideo = multer({
 export const upload = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
+    fileSize: 25 * 1024 * 1024, // 25MB
   },
 });

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style >
+        .parrent {
+            display: flex;
+            @media screen {
+                max-width: 100px;
+                flex-direction: row;
+                
+            }
+                @media screen and (max-width: 500px) {
+                    flex-direction: column;
+                }           
+        }
+        .box {
+            flex: 1;
+            border:2px solid red;
+
+        }
+    </style>
+</head>
+<body>
+    <div class="parrent" >
+        <div class="box">col1</div>
+        <div class="box">col2</div>
+        <div class="box">col3</div>
+        <div class="box">col4</div>
+    </div>
+</body>
+</html>

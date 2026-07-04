@@ -70,7 +70,7 @@ userSchema.methods.generateAccessToken = function() {
     return jwt.sign(
         { _id: this._id, username: this.username },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "1hr" }
     );
 };
 

@@ -76,13 +76,19 @@ app.use((err, req, res, next) => {
         // A Multer error occurred when uploading.
         if (err.code === "LIMIT_UNEXPECTED_FILE") {
             return res.status(400).json({
-                message: "Unexpected field in form-data",
+                message: `Invalid file field name. Please verify the field name in your request (Unexpected field: '${err.field}')`,
                 field: err.field,
                 error: err.code
             });
         }
+        if (err.code === "LIMIT_FILE_SIZE") {
+            return res.status(400).json({
+                message: "File size is too large. Please upload a smaller file.",
+                error: err.code
+            });
+        }
         return res.status(400).json({
-            message: "Multer Error",
+            message: `Multer Upload Error: ${err.message}`,
             error: err.message,
             code: err.code
         });
